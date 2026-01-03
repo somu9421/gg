@@ -1,0 +1,186 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css"/>
+    <title>Tip Calculator</title>
+</head>
+<body>
+   <h1>Tip Calculator</h1>
+    <div class="container">
+        <form id="tipForm">
+            <label for="billAmount">Bill Amount:</label>
+            <input type="number" id="billAmount"/>
+            <br>
+            <label for="tipPercentage">Tip Percentage:</label>
+            <select id="tipPercentage">
+                <option value="5">5%</option>
+                <option value="10">10%</option>
+                <option value="15">15%</option>
+                <option value="20">20%</option>
+            </select>
+            <br>
+            <button onclick="calculateTip()">Calculate Tip</button>
+            <br>
+        </form>
+        <div id="result">
+            <p id="tipAmount"></p>
+            <p id="totalAmount"></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+function calculateTip(){
+    const billAmount = document.getElementById("billAmount").value;
+    const tipPercentage = document.getElementById("tipPercentage").value;
+    const tipAmount = (billAmount*tipPercentage)/100;
+    const totalAmount = parseFloat(billAmount) + tipAmount;
+
+    document.getElementById("tipAmount").innerText = tipAmount.toFixed(2);
+    document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
+}
+
+
+button{
+    background-color: #4caf50;
+    color: #fff;
+    cursor: pointer;
+}
+.container{
+    background-color: #fff;
+}
+
+//////////////BMI Session 3 q2
+-------js
+function calculateBMI(){
+    const gender=document.getElementById('gender').value;
+    const weight=parseFloat(document.getElementById('weight').value);
+    const height=parseFloat(document.getElementById('height').value);
+
+    const resultDiv=document.getElementById('result');
+
+    resultDiv.textContent='';
+
+    if(!gender || !weight || !height){
+        resultDiv.textContent='Please fill out all fields.';
+        return; 
+    }
+
+    const bmi=(weight/((height/100)**2)).toFixed(2);
+
+    let class1='' ;
+    let col='';
+    let dd='';
+
+    if(gender=='male'){
+           dd='men';
+    }else{
+        dd='women';
+    }
+      
+
+    if(bmi<18.5){
+        class1='Underweight';
+        col='blue';
+        
+        // resultDiv.innerHTML=`<span class="${col}">Your BMI is ${bmi} ("${class1}") For ${dd},a BMI between 18.5 and 24.9 is considered healthy.</span>  `;
+
+    }else if(bmi>=18.5 && bmi<24.9){
+        class1='Normal weight';
+        col='green'; 
+        
+
+        // resultDiv.innerHTML=`<span class="${col}">Your BMI is ${bmi} ("${class1}") For ${dd},a BMI between 18.5 and 24.9 is considered healthy.</span> `;
+
+    }else if(bmi>=25 && bmi<29.9){
+        class1='Overweight';
+        col='red';
+        // resultDiv.innerHTML=`<span class="${col}">Your BMI is ${bmi} ("${class1}") For ${dd},a BMI between 18.5 and 24.9 is considered healthy.</span> `;
+
+    }else{
+        class1='Obese';
+        col='orange';
+        // resultDiv.innerHTML=`<span class="${col}">Your BMI is ${bmi} ("${class1}") For ${dd},a BMI between 18.5 and 24.9 is considered healthy.</span>  `;
+
+    }
+     resultDiv.className=`${col}`;
+    //  document.getElementById('result').className="${col}";
+    resultDiv.innerHTML=`Your BMI is ${bmi} (${class1}) For ${dd},a BMI between 18.5 and 24.9 is considered healthy.`;
+
+
+}
+
+--------css
+
+.green{
+    color: rgb(0, 128, 0);
+}
+.blue{
+    color:rgb(0, 0, 255);
+}
+.orange{
+    color: orange;
+}
+.red{
+    color: red;
+}
+
+#bmi-form{
+    padding: 10px;
+}
+
+button{
+    background-color: blue;
+}
+
+-------html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <link rel="stylesheet" href="./styles.css">
+
+</head>
+<body>
+    <div id="gg">
+        <h1>BMI Calculator</h1>
+        <form id="bmi-form">
+            <label for="gender">Gender</label>
+            <select name="Select Gender" id="gender">
+                <option value="male">male</option>
+                <option value="female">female</option>
+            </select>
+              
+            <label for="weight">Weight (kg):</label>
+            <input type="number" id="weight" required>
+
+            <label for="height">Height (cm):</label>
+            <input type="number" id="height" required>
+
+            <button type="button" onclick="calculateBMI()">Calculate</button>
+
+              <div id="result" class="result" >  </div>
+         
+
+
+        </form>
+
+
+    </div>
+   <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
