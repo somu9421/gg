@@ -1,0 +1,357 @@
+Employee.cs--------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+
+
+namespace SalesService.Models
+{
+    public class Employee
+    {
+        public int EmployeeID { get; set; }
+        public string EmployeeName { get; set; }
+        public string JoiningYear { get; set; }
+        public int DepartmentID { get; set; }
+
+        [JsonIgnore]
+        public Department? Department {get; set;}
+    }
+}
+
+Department.cs-------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+
+namespace SalesService.Models
+{
+    public class Department
+    {
+        public int DepartmentID { get; set; }
+        public string DepartmentName { get; set; }
+        public string Location { get; set; }
+        [JsonIgnore]
+        public ICollection<Employee>? Employees {get; set;}
+    }
+}
+
+
+======================================================================================
+
+HI HI ALL FAIL TOMORROW 	 
+WHERE IS SERVICE FILE BROOO...
+FULL CONFUSED
+BRAIN FUCKED
+WEEKLY EXAM MASS BUNKKKKKKK 
+=======================================================================================
+
+DepartmentController.cs------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq.Dynamic.Core;
+using SalesService.Data;
+using SalesService.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace SalesService.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+
+    public class DepartmentController : ControllerBase
+    {
+        
+        private readonly EmployeeApplicationDbContext _context;
+
+        public DepartmentController(EmployeeApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<ICollection<Department>>> GetDepartments()
+        {
+            ICollection<Department> deptList = await _context.Departments.ToListAsync();
+
+            if(deptList == null)
+                return NoContent();
+
+            return Ok(deptList);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Department>> GetDepartmentByID(int id)
+        {
+            if(id <= 0)
+                return BadRequest();
+
+            Department objDept = _context.Departments.Find(id);
+
+            if(objDept == null)
+                return NotFound();
+
+            return Ok(objDept);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Employee>> AddDepartment([FromBody]Department department)
+        {
+            if(department == null)
+                return BadRequest();
+
+            _context.Departments.Add(department);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetDepartmentByID),new{id = department.DepartmentID},department);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateEmployee(int id,[FromBody]Department department)
+        {
+            if(department == null || id <= 0)
+                return BadRequest();
+
+            Department objDepartment = _context.Departments.Find(id);
+
+            if(objDepartment == null)
+                return NotFound();
+
+            objDepartment.DepartmentName = department.DepartmentName;
+            objDepartment.Location = department.Location;
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteEmployee(int id)
+        {
+            if(id <= 0)
+                return BadRequest();
+
+            Department dept = _context.Departments.Find(id);
+
+            if(dept == null)
+                return NotFound();
+
+            _context.Departments.Remove(dept);
+            _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+    }
+}
+
+
+EmployeeController.cs-------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using SalesService.Data;
+using SalesService.Models;
+using System.Linq.Dynamic.Core;
+using Microsoft.EntityFramework;
+
+namespace SalesService.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class EmployeeController : ControllerBase
+    {
+        
+        public readonly EmployeeApplicationDbContext _context;
+
+        public EmployeeController(EmployeeApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployeesByList()
+        {
+            var list = await _context.Employees.ToListAsync();
+
+            if(list == null)
+            {
+                return BadRequest();
+            }
+
+            return Ok(list);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Employee>> GetEmployeeByID(int id,[FromBody]Employee employee)
+        {
+
+            Employee objEmployee = _context.Employees.Find(id);
+
+            if(objEmployee == null)
+                return NotFound();
+
+            return Ok(objEmployee);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Employee>> AddEmployee([FromBody] Employee employee)
+        {
+            if(employee == null || employee.DepartmentID <= 0 || int.Parse(employee.JoiningYear) <= 2024)
+            {
+                return BadRequest();
+            }
+
+            _context.Employees.Add(employee);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetEmployeeByID),new{id = employee.EmployeeID},employee);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateEmployee(int id,[FromBody]Employee employee)
+        {
+            if(employee == null || employee.DepartmentID <= 0 || int.Parse(employee.JoiningYear) <= 2024 || id < 0)
+            {
+                return BadRequest();
+            }
+
+            Employee objEmployee = _context.Employees.Find(id);
+
+            if(objEmployee == null)
+                return NotFound();
+
+            objEmployee.EmployeeName = employee.EmployeeName;
+            objEmployee.JoiningYear = employee.JoiningYear;
+            objEmployee.DepartmentID = employee.DepartmentID;
+
+            _context.SaveChanges();
+
+            return Ok(objEmployee);
+        }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<ICollection<Employee>>> GetEmployeesListSortByName([FromQuery]string name,[FromQuery]string expression)
+        {
+            if(string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(expression))
+            {
+                return BadRequest();
+            }
+            
+            var query = _context.Employees.AsQueryable();
+
+            query = expression.Equals("desc",StringComparison.OrdinalIgnoreCase)?query.OrderByDescending(e => EF.Property<object>(e,name)):query.OrderBy(e => EF.Property<object>(e,name));
+
+            var list = await query.ToListAsync();
+
+            if(list == null)
+                return NoContent();
+
+            return Ok(list);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteEmployee(int id)
+        {
+            Employee objemp = _context.Employees.Find(id);
+
+            if(objemp == null)
+                return NotFound();
+
+            _context.Employees.Remove(objemp);
+            _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+    }
+}
+
+
+ApplicationDbContext.cs------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using SalesService.Models;
+
+namespace SalesService.Data
+{
+    public class EmployeeApplicationDbContext : DbContext
+    {
+
+        public DbSet<Employee> Employees {get; set;}
+        public DbSet<Department> Departments {get;set;}
+        public EmployeeApplicationDbContext(DbContextOptions<EmployeeApplicationDbContext> options):base(options){}
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder){
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Employee>().
+            HasOne(e => e.Department).
+            WithMany(d => d.Employees).
+            HasForeignKey(e => e.DepartmentID).
+            OnDelete(DeleteBehavior.Cascade);
+        }
+
+    }
+}
+
+
+AppSetting.Json---------------------
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "myconnstring": "User ID=sa;password=examlyMssql@123;server=localhost;Database=appdb;trusted_connection=false;Persist Security Info=False;Encrypt=False"
+  }
+}
+
+
+Program.cs-----------------------
+using SalesService.Data;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<EmployeeApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("myconnstring")));
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run(); 
