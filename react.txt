@@ -1,0 +1,178 @@
+
+import React, { useState, useEffect } from "react";
+
+export default function ContactForm() {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    age: "",
+    email: "",
+    phone: "",
+    address: "",
+    pincode: "",
+    message: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState("");
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear field-specific error on change
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Required validations (exact messages)
+    if (!form.firstName) newErrors.firstName = "First name is required";
+    if (!form.lastName) newErrors.lastName = "Last name is required";
+    if (!form.age) newErrors.age = "Age is required";
+    if (!form.email) newErrors.email = "Email is required";
+    if (!form.phone) newErrors.phone = "Phone number is required";
+    if (!form.address) newErrors.address = "Address is required";
+    if (!form.pincode) newErrors.pincode = "Pincode is required";
+    if (!form.message) newErrors.message = "Message is required";
+
+    // Invalid validations (only when field is non-empty)
+    if (form.age && !/^\d+$/.test(form.age)) {
+      newErrors.age = "Invalid age";
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (form.phone && !/^\d{10}$/.test(form.phone)) {
+      newErrors.phone = "Invalid phone number";
+    }
+    if (form.pincode && !/^\d{6}$/.test(form.pincode)) {
+      newErrors.pincode = "Invalid pincode";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setSuccess("Form submitted successfully!");
+      // Clear form after submit
+      setForm({
+        firstName: "",
+        lastName: "",
+        age: "",
+        email: "",
+        phone: "",
+        address: "",
+        pincode: "",
+        message: "",
+      });
+    }
+  };
+
+  // Auto-hide success message after a few seconds
+  useEffect(() => {
+    if (success) {
+      const t = setTimeout(() => setSuccess(""), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [success]);
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="firstName">First Name:</label>
+        <input
+          id="firstName"
+          name="firstName"
+          value={form.firstName}
+          onChange={onChange}
+        />
+        {errors.firstName && <p>{errors.firstName}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="lastName">Last Name:</label>
+        <input
+          id="lastName"
+          name="lastName"
+          value={form.lastName}
+          onChange={onChange}
+        />
+        {errors.lastName && <p>{errors.lastName}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="age">Age:</label>
+        <input
+          id="age"
+          name="age"
+          value={form.age}
+          onChange={onChange}
+        />
+        {errors.age && <p>{errors.age}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="email">Email:</label>
+        <input
+          id="email"
+          name="email"
+          value={form.email}
+          onChange={onChange}
+        />
+        {errors.email && <p>{errors.email}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="phone">Phone:</label>
+        <input
+          id="phone"
+          name="phone"
+          value={form.phone}
+          onChange={onChange}
+        />
+        {errors.phone && <p>{errors.phone}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="address">Address:</label>
+        <input
+          id="address"
+          name="address"
+          value={form.address}
+          onChange={onChange}
+        />
+        {errors.address && <p>{errors.address}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="pincode">Pincode:</label>
+        <input
+          id="pincode"
+          name="pincode"
+          value={form.pincode}
+          onChange={onChange}
+        />
+        {errors.pincode && <p>{errors.pincode}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="message">Message:</label>
+        <textarea
+          id="message"
+          name="message"
+          value={form.message}
+          onChange={onChange}
+        />
+        {errors.message && <p>{errors.message}</p>}
+      </div>
+
+      <button type="submit">Submit</button>
+
+      {success && <p>Form submitted successfully!</p>}
+    </form>
+  );
+}
