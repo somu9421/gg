@@ -1,0 +1,166 @@
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+export default function App() {
+  const [form, setForm] = useState({
+    teacherName: "",
+    courseId: "",
+    phone: "",
+  });
+
+  const [courses, setCourses] = useState([]);
+  const [status, setStatus] = useState({
+    loading: false,
+    error: "",
+    success: "",
+  });
+
+  const API_BASE = "http://localhost:4000"; // change if needed
+
+  // Load courses on load
+  useEffect(() => {
+    axios
+      .get(`${API_BASE}/api/courses`)
+      .then((res) => setCourses(res.data))
+      .catch((err) =>
+        setStatus((s) => ({
+          ...s,
+          error:
+            err?.response?.data?.message ||
+            err.message ||
+            "Could not load courses",
+        }))
+      );
+  }, []);
+
+  const onChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setStatus({ loading: false, error: "", success: "" });
+  };
+
+  const validate = () => {
+    if (!form.teacherName.trim()) return "Teacher name is required";
+    if (!form.courseId) return "Please select a course";
+    if (!form.phone.trim()) return "Phone number is required";
+    if (!/^\+?\d[\d\s-]{8,14}\d$/.test(form.phone))
+      return "Enter a valid phone number";
+    return "";
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const error = validate();
+    if (error) return setStatus({ error, loading: false, success: "" });
+
+    try {
+      setStatus({ loading: true, error: "", success: "" });
+      await axios.post(`${API_BASE}/api/registrations`, form);
+
+      setStatus({
+        loading: false,
+        error: "",
+        success: "Registration successful!",
+      });
+
+      setForm({
+        teacherName: "",
+        courseId: "",
+        phone: "",
+      });
+    } catch (err) {
+      setStatus({
+        loading: false,
+        success: "",
+        error:
+          err?.response?.data?.message || err.message || "Submission failed",
+      });
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 430, margin: "30px auto", fontFamily: "sans-serif" }}>
+      <h2>Course Registration</h2>
+
+      <form onSubmit={onSubmit} noValidate>
+        {/* Teacher Name */}
+        <label style={{ display: "block", marginTop: 12 }}>
+          Teacher Name
+          <input
+            name="teacherName"
+            value={form.teacherName}
+            onChange={onChange}
+            placeholder="e.g., Ms. Priya Shah"
+            style={inputStyle}
+          />
+        </label>
+
+        {/* Course ID */}
+        <label style={{ display: "block", marginTop: 12 }}>
+          Course
+          <select
+            name="courseId"
+            value={form.courseId}
+            onChange={onChange}
+            style={inputStyle}
+          >
+            <option value="">Select a course</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Phone */}
+        <label style={{ display: "block", marginTop: 12 }}>
+          Phone Number
+          <input
+            name="phone"
+            value={form.phone}
+            onChange={onChange}
+            placeholder="+91 98765 43210"
+            style={inputStyle}
+            inputMode="tel"
+          />
+        </label>
+
+        {/* Button */}
+        <button
+          type="submit"
+          disabled={status.loading}
+          style={{
+            marginTop: 16,
+            padding: "10px 14px",
+            background: "#0F62FE",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+          }}
+        >
+          {status.loading ? "Submitting..." : "Register"}
+        </button>
+
+        {/* Messages */}
+        {status.error && (
+          <p style={{ color: "crimson", marginTop: 10 }}>{status.error}</p>
+        )}
+        {status.success && (
+          <p style={{ color: "seagreen", marginTop: 10 }}>{status.success}</p>
+        )}
+      </form>
+    </div>
+  );
+}
+
+// simple input styling
+const inputStyle = {
+  width: "100%",
+  padding: "10px",
+  borderRadius: 6,
+  border: "1px solid #ccc",
+  marginTop: 6,
+  boxSizing: "border-box",
+};
