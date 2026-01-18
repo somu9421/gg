@@ -1,0 +1,284 @@
+AFTER DOING EVERYTIN' BELOW JUS INSTALL BOOTSTRAP IN TERMINAL AFTER cd reactapp  WRITE ----> npm install bootstrap
+
+------------------------------CourseForm.JSX-------------------------------
+import React from 'react'
+import {useEffect,useState} from 'react'
+import {useNavigate,useParams} from 'react-router-dom'
+import {addCourse,getCourseById,updateCourse} from '../api/courseApi'
+
+export default function CourseForm({mode})
+{
+  const{id}=useParams();
+  const navigate=useNavigate();
+  const [form,setForm]=useState({
+    Title:"",
+    Description:"",
+    Instructor:"",
+    Duration:""
+  });
+
+  const [errors,setErrors]=useState({});
+  const[message,setMessage]=useState("");
+  useEffect(()=>{
+    const fetchCourse=async()=>{
+      if(mode==="edit"){
+        try{
+          const res=await getCourseById(id);
+          const data=res.data;
+          setForm({
+            Title:data.Title,
+            Description:data.Description,
+            Instructor:data.Instructor,
+            Duration:data.Duration
+          })
+        }
+        catch{
+          alert("Error fecthing course data");
+        }
+      }
+    }
+
+    fetchCourse();
+  },[mode,id]);
+
+const validate=()=>{
+  let e={};
+  if(!form.Title)e.Title="Title is required";
+  if(!form.Description)e.Description="Description is required";
+  if(!form.Instructor)e.Instructor="Instructor is required";
+  if(!form.Duration)e.Duration="Duration is required";
+  setErrors(e);
+  return Object.keys(e).length===0;
+};
+const handleSubmit=async()=>{
+  if(!validate()) return;
+  try{
+    if(mode==="add"){
+      await addCourse(form);
+      setForm({
+        Title:form.Title,
+        Description:form.Description,
+        Instructor:form.Instructor,
+        Duration:parseInt(form.Duration,10)
+
+      });
+      setForm({Title:"",Description:"",Instructor:"",Duration:""})
+      setMessage("Course added successfully!");
+    }
+    else {
+      await updateCourse(id,form);
+        setMessage("Course updated successfully!");
+    }
+    setTimeout(()=>navigate("/"),1000);
+  }
+  catch {
+    alert(mode==="add" ? "Error creating course": "Error updating course");
+  }
+};
+return(
+  <div className="row justify-content-center">
+    <div className="col-md-6 col-lg-5">
+      <div className="mb-2">
+    <button className="btn btn-info btn-sm" onClick={()=>navigate("/")}>Back</button>
+    </div>
+    <div className="card p-4 shadow-pm">
+    <h2 className="mb-4 text-center">{mode==="add"?"Add Course": "Edit Course"}</h2>
+    <div className="mb-3">
+      <label className="form-label">Title:</label>
+    <input className="form-control" placeholder="Course Title" value={form.Title} onChange={e=>setForm({...form,Title:e.target.value})}/>
+    {errors.Title && <p className="text-danger">{errors.Title}</p>}
+    </div>
+
+    <div className="mb-3">
+      <label  className="form-label">Course Description:</label>
+    <input className="form-control" placeholder="Course Description" value={form.Description} onChange={e=>setForm({...form,Description:e.target.value})}/>
+    {errors.Description && <p className="text-danger">{errors.Description}</p>}
+    </div>
+    
+    <div className="mb-3">
+      <label  className="form-label">Instructor Name:</label>
+    <input className="form-control" placeholder="Course Instructor" value={form.Instructor} onChange={e=>setForm({...form,Instructor:e.target.value})}/>
+    {errors.Instructor && <p className="text-danger">{errors.Instructor}</p>}
+    </div>
+
+    <div className="mb-3">
+      <label  className="form-label">Duration(Hours):</label>
+    <input className="form-control" placeholder="Course Duration" value={form.Duration} onChange={e=>setForm({...form,Duration:e.target.value})}/>
+    {errors.Duration && <p className="text-danger">{errors.Duration}</p>}
+    </div>
+
+    <button className="btn btn-danger" onClick={handleSubmit}>{mode==="add" ? "Save": "Update"}</button>
+    {message && <p className="text-success mt-3 text-center">{message}</p>}
+    </div>
+    </div>
+  </div>
+
+
+);
+}
+
+
+-----------------------CourseList.JSX--------------------------------------
+import {useNavigate} from 'react-router-dom'
+import React from 'react'
+import {useEffect,useState} from 'react'
+import axios from 'axios'
+import {API_URL} from '../api/courseApi'
+
+//const API_URL="https://ide-caabbcdaeeacbea340883770adceabdecone.premiumproject.examly.io/proxy/8080/api/courses";
+export default function CourseList(){
+  const [courses,setCourses]=useState([]);
+  const [error,setError]=useState("");
+  const navigate=useNavigate();
+
+  useEffect(()=>{
+    axios.get(API_URL)
+    .then(res=>setCourses(res.data))
+    .catch(()=>setError("Failed to load courses"))
+  },[]);
+
+  const handleDelete=async(courseId)=>{
+    try{
+      await axios.delete(`${API_URL}/${courseId}`)
+
+      setCourses(courses.filter((course)=>course.CourseId !==courseId));
+    }
+    catch{setError("Delete failed")}
+  };
+
+
+  if(courses.length===0) return <p className="text-center mt-4">No courses available</p>
+
+  return(
+    <div className="container mt-4">
+      <h2 className="mb-4">Course List</h2>
+     
+    {courses && (
+      <table className="table table=bordered table-striped">
+        <thead className="table-light">
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Instructor</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {courses.map((course)=>(
+            <tr key={course.CourseId}>
+              {/*<td>{course.title}</td>*/}
+              <td>{course.Title}</td>
+              <td>{course.Description}</td>
+              <td>{course.Instructor}</td>
+              <td>{course.Duration}</td>
+              <td>
+                <button className="btn btn-success btn-sm me-2" onClick={()=>navigate(`/edit/${course.CourseId}`)}>Edit</button>
+                <button className="btn btn-danger btn-sm" onClick={()=>handleDelete(course.CourseId)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+    {error && <p className="text-danger">{error}</p>}
+
+    </div>
+  )
+}
+
+
+---------------------------------------NavBar.JSX---------------------------------
+import React from 'react';
+import {Link} from "react-router-dom";
+
+const NavBar=()=>{
+  return (
+    <nav className="navbar navbar-expand px-3 mb-4 bg-primary">
+    <div className="d-flex justify-content-between w-100 align-items-center">
+      <h3 className="mb-0">Online Course Management</h3>
+    <div className="d-flex gap-4">
+        <Link className="nav-link" to="/">Course List</Link>
+        <Link className="nav-link" to="/add">Add Course</Link>
+      </div>
+      </div>
+    </nav>
+  )
+}
+
+export default NavBar
+-----------------------------courseApi.jsx----------------------------------------
+import axios from 'axios'
+export const API_URL="https://ide-caabbcdaeeacbea340883770adceabdecone.premiumproject.examly.io/proxy/8080/api/courses";
+export const getCourses=()=>axios.get(API_URL);
+export const getCourseById=(courseId)=>axios.get(`${API_URL}/${courseId}`);
+export const addCourse=(course)=>axios.post(API_URL,course);
+export const updateCourse=(courseId,course)=>axios.put(`${API_URL}/${courseId}`,course);
+
+-----------------------------App.js------------------------------------------
+import React from 'react'
+import NavBar from './Components/NavBar';
+import CourseForm from './Components/CourseForm';
+import CourseList from './Components/CourseList';
+import {Routes,Route,BrowserRouter} from "react-router-dom";
+
+const App =() => {
+  return (
+    <>
+    <BrowserRouter>
+    <NavBar/>
+    <Routes>
+      <Route path="/add" element={<CourseForm mode="add"/>}/>
+      <Route path="/edit/:id" element={<CourseForm mode="edit"/>}/>
+      <Route path="/" element={<CourseList/>}/>
+    </Routes>
+    </BrowserRouter>
+    </>
+  );
+}
+
+export default App;
+--------------------------program.cs-------------------------------------
+using System.Buffers;
+using dotnetapp.Data;
+using System.Text.Json;
+using dotnetapp.Services;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+
+builder.Services.AddControllers().AddJsonOptions(OperationStatus =>{
+    OperationStatus.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<CourseService>();
+
+builder.Services.AddCors(options=>options.AddDefaultPolicy(builder=>{
+        builder.AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin();
+}));
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+app.UseCors();
+
+app.MapControllers();
+
+app.Run();
